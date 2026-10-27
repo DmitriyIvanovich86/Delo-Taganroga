@@ -1,7 +1,8 @@
 """Карточка «Дело Таганрога» 1080x1080 по ссылке (Vercel).
 
 Ссылка:  https://<сайт>.vercel.app/api/card?d=<card.json в base64url>
-Поля card.json: top, big, sub (1-2 строки), badge, cols (0-2 пары [подпись, значение]), source
+Поля card.json: top, big, sub (1-2 строки), badge, cols (0-2 пары [подпись, значение]), source,
+brand (подпись внизу слева, по умолчанию «Дело Таганрога»), theme («taganrog» по умолчанию или «cfa» — бирюзовый акцент)
 Шрифт Inter (OFL) скачивается сам из репозитория Google Fonts.
 """
 import base64
@@ -19,6 +20,8 @@ NAVY, NAVY2, WHITE, ORANGE, MUTED = (14, 32, 68), (24, 48, 96), (255, 255, 255),
 FONT_URL = "https://raw.githubusercontent.com/google/fonts/main/ofl/inter/Inter%5Bopsz,wght%5D.ttf"
 FONT_PATH = os.environ.get("CARD_FONT", "/tmp/Inter.ttf")
 WEIGHTS = {"medium": 500, "semibold": 600, "bold": 700, "extrabold": 800}
+TURQUOISE = (32, 201, 190)
+THEMES = {"taganrog": ORANGE, "cfa": TURQUOISE}
 _cache = {}
 
 
@@ -42,25 +45,26 @@ def fit(d, text, weight, size, max_w):
 
 
 def render(c):
+    ACC = THEMES.get(c.get("theme", "taganrog"), ORANGE)
     im = Image.new("RGB", (W, W), NAVY)
     d = ImageDraw.Draw(im)
     for i, h in enumerate([160, 210, 250, 300, 360, 430]):
         x = 600 + i * 75
         d.rectangle([x, W - 150 - h, x + 50, W - 150], fill=NAVY2)
-    d.rectangle([0, 0, W, 14], fill=ORANGE)
+    d.rectangle([0, 0, W, 14], fill=ACC)
 
     def center(y, text, f, fill):
         d.text(((W - d.textlength(text, font=f)) / 2, y), text, font=f, fill=fill)
 
     center(80, c.get("top", ""), fit(d, c.get("top", ""), "semibold", 34, W - 120), MUTED)
-    center(250, c.get("big", ""), fit(d, c.get("big", ""), "extrabold", 190, W - 100), ORANGE)
+    center(250, c.get("big", ""), fit(d, c.get("big", ""), "extrabold", 190, W - 100), ACC)
     for i, line in enumerate(c.get("sub", [])[:2]):
         center(490 + i * 60, line, fit(d, line, "medium", 46, W - 120), WHITE)
     if c.get("badge"):
         bf = fit(d, c["badge"], "bold", 48, W - 240)
         tw = d.textlength(c["badge"], font=bf)
         bx = (W - tw) / 2 - 36
-        d.rounded_rectangle([bx, 650, bx + tw + 72, 730], radius=40, fill=ORANGE)
+        d.rounded_rectangle([bx, 650, bx + tw + 72, 730], radius=40, fill=ACC)
         d.text((bx + 36, 660), c["badge"], font=bf, fill=NAVY)
     cols = c.get("cols", [])[:2]
     if len(cols) == 2:
@@ -70,7 +74,7 @@ def render(c):
         lf, vf = fit(d, label, "medium", 30, 440), fit(d, value, "bold", 48, 440)
         d.text((cx - d.textlength(label, font=lf) / 2, 805), label, font=lf, fill=MUTED)
         d.text((cx - d.textlength(value, font=vf) / 2, 855), value, font=vf, fill=WHITE)
-    d.text((60, 1010), "Дело Таганрога", font=font("bold", 28), fill=WHITE)
+    d.text((60, 1010), c.get("brand", "Дело Таганрога"), font=font("bold", 28), fill=WHITE)
     src = c.get("source", "")
     sf = fit(d, src, "medium", 26, 600)
     d.text((W - 60 - d.textlength(src, font=sf), 1012), src, font=sf, fill=MUTED)
