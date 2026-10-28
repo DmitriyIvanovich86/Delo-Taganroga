@@ -1,5 +1,12 @@
 {
   "functions": {
-    "api/card.py": { "includeFiles": "Inter-*.otf" }
+    "api/card.py": {
+      "includeFiles": "Inter-*.otf"
+    }
+  },
+  "git": {
+    "deploymentEnabled": {
+      "files": false
+    }
   }
 }
